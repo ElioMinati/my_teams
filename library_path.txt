@@ -1,0 +1,2 @@
+LD_PRELOAD=`pwd`/libs/myteams/libmyteams.so
+export LD_LIBRARY_PATH=`pwd`/libs/myteams/

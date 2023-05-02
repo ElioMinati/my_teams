@@ -1,0 +1,210 @@
+Command list:
+
+    • /help <CRLF>                                                                      : show help
+    • /login <SP> <"user_name"> <CRLF>                                                  : set the user_name used by client
+    • /logout <CRLF>                                                                    : disconnect the client from the server
+    • /users <CRLF>                                                                     : get the list of all users that exist on the domain
+    • /user <SP> <"user_uuid"> <CRLF>                                                   : get details about the requested user
+    • /send <SP> <"user_uuid"> <SP> <“message_body”> <CRLF>                             : send a message to specific user
+    • /messages <SP> <“user_uuid”> <CRLF>                                               : list all messages exchanged with the specified user
+    • /subscribe <SP> <“team_uuid”> <CRLF>                                              : subscribe to the events of a team and its sub directories (enable reception of all events from a team)
+    • /subscribed ?<SP> ?<“team_uuid”> <CRLF>                                           : list all subscribed teams or list all users subscribed to a team
+    • /unsubscribe <SP> <“team_uuid”> <CRLF>                                            : unsubscribe from a team
+    • /use ?<SP> ?<“team_uuid”> ?<SP> ?<“channel_uuid”> ?<SP> ?<"thread_uuid"> <CRLF>   : Sets the command context to a team/channel/thread
+    • /create <SP> <"title/body">  ?<SP> ?<"description"> <CRLF>                        : based on the context, create the sub resource
+    • /list <CRLF>                                                                      : based on the context, list all the sub resources
+    • /info <CRLF>                                                                      : based on the context, display details of the current resource
+
+-------------------------------------
+
+Command-Reply Sequences
+
+The server reply is defined to contain the 3-digit code, followed by Space <SP>, followed by one line of text, and terminated by the Telnet end-of-line code <CRLF>.
+
+Example :
+
+-> /login <SP> "Username" <CRLF>
+<- 211 <SP> User "E9ED61F1C-72-916E7-41D41D82F82E60D3FD" with name "Username" logged in. <CRLF>
+-> /logout <CRLF>
+<- 299 <SP> Goodbye. <CRLF>
+
+        Connection Establishment
+            <- 201
+
+        Login
+            /login ->
+                <- 205
+                <- 207
+                <- 405
+                <- 412
+                <- 413
+                <- 415
+
+        Logout
+            /logout ->
+                <- 299
+                <- 403
+        
+        Context
+            /use ->
+                <- 300
+                <- 403
+                <- 405
+        
+        Listing
+            /user ->
+                <- 502
+                <- 403
+                <- 405
+                <- 418
+
+            /users ->
+                <- 501
+                <- 403
+
+            /list ->
+                <- 503
+                <- 504
+                <- 505
+                <- 506
+                <- 403
+                <- 428
+                <- 438
+                <- 448
+        
+            /info ->
+                <- 502
+                <- 512
+                <- 513
+                <- 514
+                <- 403
+                <- 428
+                <- 438
+                <- 448
+
+        Messages:
+            /send ->
+                <- 300
+                <- 403
+                <- 405
+                <- 418
+
+            /messages ->
+                <- 511
+                <- 403
+                <- 405
+                <- 418
+
+        Team:
+            /subscribe ->
+                <- 222
+                <- 403
+                <- 405
+                <- 428
+
+            /unsubscribe ->
+                <- 223
+                <- 403
+                <- 405
+                <- 428
+
+            /subscribed ->
+                <- 501
+                <- 503
+                <- 403
+                <- 405
+                <- 428
+
+        Creation:
+            /create ->
+                <- 701
+                <- 702
+                <- 703
+                <- 705
+                <- 403
+                <- 405
+                <- 413
+                <- 428
+                <- 438
+                <- 448
+
+        Miscelaneous
+            /help ->
+                <- 300
+
+    Event recieving:
+
+        /login ->
+            <- 211
+
+        /logout ->
+            <- 212
+        
+        /send ->
+            <- 602
+
+        /create ->
+            <- 704
+            <- 711
+            <- 712
+            <- 713
+
+-------------------------------------
+
+4xx: Errors
+
+403 Not authorized.
+404 Unknown command.
+405 Syntax error in parameters or arguments.
+412 Already logged in.
+413 Already Exists.
+415 '"' or ',' characters cannot be present in name.
+418 User "UUID" not found.
+428 Team "TEAM_UUID" not found.
+438 Channel "CHANNEL_UUID" not found.
+448 Thread "THREAD_UUID" not found.
+
+--------------------------------------
+
+2xx: Connection
+
+201 Service ready for new user.
+205 User "UUID" created successfully.
+207 User "UUID" logged in succesfully.
+211 User "UUID" with name "USER_NAME" logged in.
+212 User "UUID" with name "USER_NAME" logged out.
+222 User successfully subscribed to team "TEAM_UUID"
+223 User successfully unsubscribed from team "TEAM_UUID"
+299 Goodbye.
+
+3xx: Misc
+
+300 Command okay.
+
+5xx: Listing
+
+501 Here are the informations of the users ["UUID,USER_NAME,IS_CONNECTED" "UUID,USER_NAME,IS_CONNECTED" ...]
+502 Here is the information for requested user "UUID, USER_NAME,IS_CONNECTED"
+503 Here are the informations of the teams ["UUID,TEAM_NAME,TEAM_DESCRIPTION" "UUID,TEAM_NAME,TEAM_DESCRIPTION" ...]
+504 Here are the informations of the channels ["UUID,CHANNEL_NAME,CHANNEL_DESCRIPTION" "UUID,CHANNEL_NAME,CHANNEL_DESCRIPTION" ...]
+505 Here are the informations of the threads ["THREAD_UUID,CREATOR_UUID,THREAD_TIMESTAMP,THREAD_NAME,THREAD_DESCRIPTION" "THREAD_UUID,CREATOR_UUID,THREAD_TIMESTAMP,THREAD_NAME,THREAD_DESCRIPTION" ...]
+506 Here are the informations of the replies ["THREAD_UUID,USER_UUID,REPLY_TIMESTAMP,REPLY_BODY" "UUID,REPLY_BODY" ...]
+511 Here is the conversation history with "UUID" ["UUID,TIMESTAMP,"MESSAGE" "UUID,TIMESTAMP,"MESSAGE" ...]
+512 Here is the information for requested team "TEAM_UUID,TEAM_NAME,TEAM_DESCRIPTION"
+513 Here is the information for requested channel "CHANNEL_UUID,CHANNEL_NAME,CHANNEL_DESCRIPTION"
+514 Here is the information for requested thread "TRHEAD_UUID,CREATOR_UUID,THREAD_TIMESTAMP,THREAD_NAME,THREAD_DESCRIPTION"
+
+6xx: Content sending
+
+602 New message from "UUID": "MSG_BODY"
+
+7xx: creation
+
+701 Team "TEAM_UUID" with name "TEAM_NAME" and description "TEAM_DESCRIPTION" was created.
+702 Channel "CHANNEL_UUID" with name "CHANNEL_NAME" and description "CHANNEL_DESCRIPTION" was created.
+703 Thread "THREAD_UUID" with timestamp "THREAD_TIMESTAMP", name "THREAD_NAME" and description "THREAD_DESCRIPTION" was created.
+704 Thread reply recieved from team "TEAM_UUID" in thread "THREAD_UUID" from "USER_UUID" with body: "REPLY_BODY".
+705 Thread "TRHEAD_UUID" reply created at "REPLY_TIMESTAMP": "REPLY_BODY".
+711 Team "TEAM_UUID" with name "TEAM_NAME" and description "TEAM_DESCRIPTION" was created.
+712 Channel "CHANNEL_UUID" with name "CHANNEL_NAME" and description "CHANNEL_DESCRIPTION" was created.
+713 Thread "THREAD_UUID" created by: "CREATOR_UUID" with timestamp "THREAD_TIMESTAMP", name "THREAD_NAME" and description "THREAD_DESCRIPTION" was created.
